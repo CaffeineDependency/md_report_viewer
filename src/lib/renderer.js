@@ -8,6 +8,69 @@
 //   - content stays server-controlled; responses carry a strict CSP as backstop
 
 import MarkdownIt from "markdown-it";
+import hljs from "highlight.js/lib/core";
+import langC from "highlight.js/lib/languages/c";
+import langCpp from "highlight.js/lib/languages/cpp";
+import langArduino from "highlight.js/lib/languages/arduino";
+import langPython from "highlight.js/lib/languages/python";
+import langBash from "highlight.js/lib/languages/bash";
+import langShell from "highlight.js/lib/languages/shell";
+import langVerilog from "highlight.js/lib/languages/verilog";
+import langVhdl from "highlight.js/lib/languages/vhdl";
+import langMatlab from "highlight.js/lib/languages/matlab";
+import langJson from "highlight.js/lib/languages/json";
+import langJavascript from "highlight.js/lib/languages/javascript";
+import langSql from "highlight.js/lib/languages/sql";
+import langMakefile from "highlight.js/lib/languages/makefile";
+import langDiff from "highlight.js/lib/languages/diff";
+import langYaml from "highlight.js/lib/languages/yaml";
+import langXml from "highlight.js/lib/languages/xml";
+import langPlaintext from "highlight.js/lib/languages/plaintext";
+
+// Only the languages used by lab reports are bundled; everything else stays
+// plain text. Grammars are class-based (no inline styles), so the strict CSP
+// is unchanged and themes live in CSS.
+for (const [name, grammar] of [
+  ["c", langC],
+  ["cpp", langCpp],
+  ["arduino", langArduino],
+  ["python", langPython],
+  ["bash", langBash],
+  ["shell", langShell],
+  ["verilog", langVerilog],
+  ["vhdl", langVhdl],
+  ["matlab", langMatlab],
+  ["json", langJson],
+  ["javascript", langJavascript],
+  ["sql", langSql],
+  ["makefile", langMakefile],
+  ["diff", langDiff],
+  ["yaml", langYaml],
+  ["xml", langXml],
+  ["plaintext", langPlaintext],
+]) {
+  hljs.registerLanguage(name, grammar);
+}
+
+/**
+ * Highlight a fenced code block. Returns HTML that is safe to inject: the
+ * highlighter escapes text, and unknown languages fall back to plain escaping.
+ * @param {string} content
+ * @param {string} language already sanitized (empty = no language)
+ * @returns {string}
+ */
+function highlightCode(content, language) {
+  if (!language) return md.utils.escapeHtml(content);
+  try {
+    if (!hljs.getLanguage(language)) return md.utils.escapeHtml(content);
+    return hljs.highlight(content, {
+      language,
+      ignoreIllegals: true,
+    }).value;
+  } catch {
+    return md.utils.escapeHtml(content);
+  }
+}
 
 const ALLOWED_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
 
@@ -46,23 +109,28 @@ function makeRenderer() {
 
   // --- fenced and indented code blocks: LTR <figure> with language + copy hook
   const renderCode = (content, lang) => {
-    const escaped = md.utils.escapeHtml(content);
+    const highlighted = highlightCode(content, lang);
+    const safeLang = md.utils.escapeHtml(lang);
     const langLabel = lang
-      ? `<span class="code-lang">${lang}</span>`
+      ? `<span class="code-lang">${safeLang}</span>`
       : `<span class="code-lang" dir="rtl">کد</span>`;
     return (
       `<figure class="code-block" dir="ltr">\n` +
       `<figcaption class="code-block-head">${langLabel}` +
       `<button type="button" class="copy-code-btn" data-copy-code="1">کپی</button>` +
       `</figcaption>\n` +
-      `<pre><code class="language-${lang || "text"}">${escaped}</code></pre>\n` +
+      `<pre><code class="hljs language-${lang || "text"}">${highlighted}</code></pre>\n` +
       `</figure>\n`
     );
   };
 
   md.renderer.rules.fence = (tokens, idx) => {
     const token = tokens[idx];
-    return renderCode(token.content, md.utils.escapeHtml(token.info.trim().split(/\s+/)[0]));
+    const info = token.info.trim().split(/\s+/)[0] || "";
+    // Info strings are user input: only plain language identifiers reach the
+    // class attribute / highlighter.
+    const lang = /^[A-Za-z0-9#+._-]{1,32}$/.test(info) ? info : "";
+    return renderCode(token.content, lang);
   };
   md.renderer.rules.code_block = (tokens, idx) =>
     renderCode(tokens[idx].content, "");

@@ -227,6 +227,17 @@ let FILE_URL;
     page.status === 200 && html.includes(IMG_URL) && html.includes(FILE_URL) && html.includes("code-block")
   );
   check("public page og meta", html.includes("og:title"));
+  check(
+    "public page: print/PDF button + highlighted code",
+    html.includes('id="print-report"') &&
+      html.includes('class="hljs language-c"') &&
+      html.includes('<span class="hljs-')
+  );
+  const printCss = await (await fetch(BASE + "/static/css/base.css")).text();
+  check(
+    "print stylesheet: A4 @page + print media",
+    printCss.includes("@page") && printCss.includes("size: A4") && printCss.includes("@media print")
+  );
 
   const edited = await api("PUT", `/api/reports/${REPORT_ID}`, COOKIE, {
     title: "گزارش آزمایش دود (نسخه دوم)",

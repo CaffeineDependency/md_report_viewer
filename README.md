@@ -29,6 +29,14 @@ Step-by-step production deployment: see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
   targets; desktops get a 74–80rem shell,
   a multi-column home and a 50rem reading column. Checked at 320, 390, 768,
   1440 and 1920 px.
+- **Readable code**: fenced blocks are highlighted server-side (C, C++,
+  Arduino, Python, Bash/Shell, Verilog, VHDL, Matlab, JSON, JavaScript, SQL,
+  Makefile, diff, YAML, XML) with IDE-style colors in both themes; unknown
+  languages stay plain, and the copy button still copies the raw text.
+- **Print / PDF**: every report has a «چاپ / PDF» button that opens the
+  browser print dialog with an A4 page, 15mm/14mm margins, a light
+  ink-friendly layout, colored code, and table headers repeated on each page.
+  Choose "Save as PDF" there.
 - **Search**: title/tag substring search and category chips on the homepage.
 - **Security**: PBKDF2 password hash, signed stateless session cookie, CSRF
   protection on all mutations, strict CSP (`default-src 'none'`; no inline
@@ -57,7 +65,7 @@ node -e "console.log(crypto.randomBytes(32).toString('base64url'))"  # SESSION_S
 |---|---|
 | `npm run dev` | `wrangler dev` on <http://localhost:8787> |
 | `npm test` | unit tests (markdown renderer, asset validation) |
-| `npm run smoke` | 44-check end-to-end test against a running `wrangler dev` (works against production too) |
+| `npm run smoke` | 46-check end-to-end test against a running `wrangler dev` (works against production too) |
 | `npm run deploy` | deploy Worker + assets + bindings config to Cloudflare |
 | `node scripts/hash-password.mjs <pw>` | generate `ADMIN_PASSWORD_HASH` |
 
@@ -94,4 +102,5 @@ table; deleting a report purges bytes that no other report references; a
   the link") and link them from the Markdown — normal links just work. Remote
   *images* are blocked by the CSP (`img-src 'self'`), so screenshots should be
   uploaded here; Drive also blocks hotlinking.
-- No multi-user, no comments, no syntax highlighting, no AI integration.
+- No multi-user, no comments, no AI integration; PDF export uses the browser's
+  print dialog (no server-side PDF engine).

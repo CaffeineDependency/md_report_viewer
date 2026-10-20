@@ -69,6 +69,56 @@
   });
 
   // ------------------------------------------------------------------
+  // Print / save as PDF: browsers do the pagination, driven by @media print.
+  // Wait for fonts and lazy images first, and give the PDF a clean filename.
+  // ------------------------------------------------------------------
+
+  var printBtn = document.getElementById("print-report");
+  if (printBtn) {
+    var originalTitle = document.title;
+
+    function waitForImages() {
+      var images = Array.prototype.slice.call(
+        document.querySelectorAll("img.report-img")
+      );
+      return Promise.all(
+        images.map(function (img) {
+          img.loading = "eager";
+          if (img.complete) return Promise.resolve();
+          return new Promise(function (resolve) {
+            var done = false;
+            function finish() {
+              if (done) return;
+              done = true;
+              resolve();
+            }
+            img.addEventListener("load", finish, { once: true });
+            img.addEventListener("error", finish, { once: true });
+            setTimeout(finish, 3000);
+          });
+        })
+      );
+    }
+
+    printBtn.addEventListener("click", function () {
+      var waitFonts =
+        document.fonts && document.fonts.ready
+          ? document.fonts.ready.catch(function () {})
+          : Promise.resolve();
+
+      Promise.all([waitFonts, waitForImages()]).then(function () {
+        var heading = document.querySelector("article.markdown-body h1");
+        if (heading) document.title = heading.textContent.trim();
+        window.print();
+      });
+    });
+
+    window.addEventListener("afterprint", function () {
+      document.title = originalTitle;
+    });
+  }
+
+  // ------------------------------------------------------------------
   // Lightbox: click a report image to view it large; Esc / overlay click closes
   // ------------------------------------------------------------------
 

@@ -45,6 +45,20 @@ html[data-theme="dark"] {
   --code-text: #d6e2e6;
   --code-muted: #7f939b;
   --code-border: #223138;
+  /* Syntax tokens (IDE-like) for the always-dark code blocks. */
+  --tok-comment: #7d939b;
+  --tok-keyword: #c792ea;
+  --tok-string: #a5d6a7;
+  --tok-number: #f2cc60;
+  --tok-title: #7fdbca;
+  --tok-type: #ffcb6b;
+  --tok-builtin: #89ddff;
+  --tok-variable: #e6edf0;
+  --tok-tag: #f07178;
+  --tok-meta: #d2a8ff;
+  --tok-punct: #9fb0b7;
+  --tok-add: #a5d6a7;
+  --tok-del: #f07178;
   --radius: 10px;
 }
 
@@ -417,6 +431,19 @@ textarea {
 .crumbs {
   margin-block-end: 1rem;
   font-size: 0.9rem;
+}
+
+.report-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-block-end: 1rem;
+}
+
+.report-toolbar .crumbs {
+  margin-block-end: 0;
 }
 
 /* ---------------------------------------------------------------- editor */
@@ -913,6 +940,104 @@ a.chip:hover {
   padding: 0;
   border-radius: 0;
   font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+
+/* Syntax highlighting (highlight.js class output; no inline styles).
+   Grouped so new grammars inherit sensible colors automatically. */
+.hljs-comment,
+.hljs-quote {
+  color: var(--tok-comment);
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-doctag,
+.hljs-meta .hljs-keyword {
+  color: var(--tok-keyword);
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-char.escape_,
+.hljs-template-tag,
+.hljs-template-variable {
+  color: var(--tok-string);
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-symbol,
+.hljs-bullet {
+  color: var(--tok-number);
+}
+
+.hljs-title,
+.hljs-title.function_,
+.hljs-function .hljs-title,
+.hljs-section {
+  color: var(--tok-title);
+}
+
+.hljs-type,
+.hljs-title.class_,
+.hljs-class .hljs-title,
+.hljs-selector-class,
+.hljs-selector-id {
+  color: var(--tok-type);
+}
+
+.hljs-built_in,
+.hljs-selector-attr,
+.hljs-selector-pseudo,
+.hljs-link {
+  color: var(--tok-builtin);
+}
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-property,
+.hljs-variable.language_ {
+  color: var(--tok-type);
+}
+
+.hljs-variable,
+.hljs-params,
+.hljs-subst {
+  color: var(--tok-variable);
+}
+
+.hljs-tag,
+.hljs-name {
+  color: var(--tok-tag);
+}
+
+.hljs-meta,
+.hljs-meta .hljs-string {
+  color: var(--tok-meta);
+}
+
+.hljs-operator,
+.hljs-punctuation {
+  color: var(--tok-punct);
+}
+
+.hljs-addition {
+  color: var(--tok-add);
+}
+
+.hljs-deletion {
+  color: var(--tok-del);
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 700;
 }
 
 /* Images: responsive, centered, never overflow */
@@ -1204,5 +1329,256 @@ article.markdown-body {
 @media (min-width: 90em) {
   .container {
     max-width: 80rem;
+  }
+}
+
+/* ---------------------------------------------------------- print / PDF */
+/* The report page is the print artifact: A4 with real margins, light and
+   ink-friendly regardless of the on-screen theme, syntax colors preserved.
+   The «چاپ / PDF» button calls window.print(); the browser paginates. */
+@page {
+  size: A4 portrait;
+  margin: 15mm 14mm;
+}
+
+@media print {
+  html,
+  html[data-theme="dark"],
+  html[data-theme="light"] {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #ffffff;
+    --input-bg: #ffffff;
+    --text: #1c2529;
+    --text-soft: #4b5563;
+    --primary: #0f766e;
+    --primary-soft: #e6f4f1;
+    --border: #c9d1d9;
+    --code-bg: #f6f8fa;
+    --code-head-bg: #eef1f4;
+    --code-text: #1f2328;
+    --code-muted: #57606a;
+    --code-border: #d0d7de;
+    --tok-comment: #6e7781;
+    --tok-keyword: #8250df;
+    --tok-string: #0a3069;
+    --tok-number: #0550ae;
+    --tok-title: #6639ba;
+    --tok-type: #953800;
+    --tok-builtin: #0550ae;
+    --tok-variable: #1f2328;
+    --tok-tag: #116329;
+    --tok-meta: #953800;
+    --tok-punct: #57606a;
+    --tok-add: #116329;
+    --tok-del: #82071e;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  html,
+  body {
+    overflow: visible;
+    background: #fff;
+    color: #1c2529;
+    min-height: 0;
+  }
+
+  body {
+    display: block;
+    font-size: 11pt;
+    line-height: 1.65;
+  }
+
+  .site-header,
+  .site-footer,
+  .report-toolbar,
+  .table-scroll-hint,
+  .copy-code-btn,
+  .lightbox-overlay,
+  .skip-link {
+    display: none !important;
+  }
+
+  main,
+  main.container,
+  .container {
+    display: block;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  article.markdown-body {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  article.markdown-body h1 {
+    font-size: 20pt;
+    line-height: 1.35;
+    margin: 0 0 6pt;
+    break-after: avoid;
+  }
+
+  article.markdown-body h2 {
+    font-size: 14pt;
+    margin-block: 14pt 5pt;
+    break-after: avoid;
+  }
+
+  article.markdown-body h3 {
+    font-size: 12pt;
+    margin-block: 11pt 4pt;
+    break-after: avoid;
+  }
+
+  article.markdown-body h4,
+  article.markdown-body h5,
+  article.markdown-body h6 {
+    font-size: 11pt;
+    break-after: avoid;
+  }
+
+  .report-head-meta {
+    border-color: #c9d1d9;
+    color: #4b5563;
+    padding-block-end: 6pt;
+    margin-block-end: 10pt;
+  }
+
+  .chip {
+    background: #eef1f4;
+    color: #1f2328;
+    border: 1px solid #d0d7de;
+    padding: 0 6pt;
+    font-size: 8.5pt;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  article.markdown-body a {
+    color: #0f4c46;
+    text-decoration: underline;
+  }
+
+  article.markdown-body p,
+  article.markdown-body li {
+    orphans: 2;
+    widows: 2;
+  }
+
+  .markdown-body code {
+    background: #eef1f4;
+    color: #1f2328;
+    padding: 0.05em 0.3em;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Fenced code: light card, wrapping (never clipped), kept on one page
+     when it fits; Chrome only breaks blocks taller than a page. */
+  .code-block {
+    break-inside: avoid;
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 4px;
+    margin: 8pt 0;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .code-block-head {
+    background: #eef1f4;
+    border-block-end: 1px solid #d0d7de;
+    color: #57606a;
+    padding: 2pt 7pt;
+    font-size: 8pt;
+  }
+
+  .code-lang {
+    color: #57606a;
+  }
+
+  .code-block pre {
+    overflow: visible;
+    padding: 6pt 7pt;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.45;
+  }
+
+  .code-block pre code,
+  .code-block pre code.hljs {
+    background: transparent;
+    color: #1f2328;
+    padding: 0;
+    border-radius: 0;
+    font-size: 8.5pt;
+    line-height: 1.45;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Tables: light card, header repeated on every page, rows kept intact.
+     Long tables are allowed to split across pages. */
+  .table-wrap {
+    overflow: visible;
+    border: 1px solid #c9d1d9;
+    border-radius: 4px;
+    break-inside: auto;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .table-wrap table {
+    width: 100%;
+    min-width: 0;
+    font-size: 8pt;
+    border-collapse: collapse;
+  }
+
+  .table-wrap thead {
+    display: table-header-group;
+    background: #eef1f4;
+  }
+
+  .table-wrap th,
+  .table-wrap td {
+    border-color: #c9d1d9;
+    padding: 3pt 4pt;
+    overflow-wrap: anywhere;
+  }
+
+  .table-wrap tr {
+    break-inside: avoid;
+  }
+
+  .markdown-body img.report-img {
+    max-width: 100%;
+    max-height: 235mm;
+    break-inside: avoid;
+    border-color: #c9d1d9;
+    margin: 8pt auto;
+  }
+
+  blockquote {
+    break-inside: avoid;
+    background: #f6f8fa;
+    border-color: #c9d1d9;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  pre,
+  blockquote,
+  img {
+    break-inside: avoid-page;
+  }
+
+  hr {
+    border-color: #d0d7de;
   }
 }

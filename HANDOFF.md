@@ -36,9 +36,10 @@ Personas:
 | 6 | Smoke script, README, deployment guide, real deployment | ✅ done — LIVE at https://gozaresh-kar.parsamirzaagha0.workers.dev |
 | 7 | UI overhaul: dark theme (default) + toggle, teal accent, phone overflow fixes, desktop home grid, dashboard delete bug | ✅ done, live-verified (44/44 smoke on prod) |
 | 8 | Responsive pass: real desktop layout (auto-fit grid, 74–80rem shell), phone report redesign (inset rounded table/code cards, denser cells, swipe hint), page-wide overflow guard | ✅ done, live-verified (44/44 smoke on prod) |
+| 9 | Syntax highlighting (highlight.js, server-side) + print/PDF export (A4 print stylesheet, light theme, colored code) | ✅ done, live-verified (46/46 smoke on prod) |
 
 Everything verified locally against `wrangler dev` and then re-verified
-against the live production Worker (44-check smoke suite: 44/44 on both).
+against the live production Worker (46-check smoke suite: 46/46 on both).
 Remaining open items and manual browser checks — see §13.
 
 ## 3. Architecture on Cloudflare
@@ -174,7 +175,9 @@ regenerated never; collisions on create are retried (5 attempts, 62⁻¹² odds)
 `src/lib/renderer.js` is the only Markdown→HTML path. The admin preview
 posts Markdown to `/api/preview` and injects the returned HTML; public pages
 render server-side with the same module. Same output, same rules, always.
-This also gives real SEO and clean Telegram/WhatsApp link previews
+Fenced code is highlighted here too (highlight.js, class-based output), so
+colors appear identically in the editor preview and on the public page. This
+also gives real SEO and clean Telegram/WhatsApp link previews
 (og:title/description/url on report pages), which was the reason for choosing
 SSR over a client-side SPA (user-approved deviation from the original doc).
 
@@ -185,8 +188,8 @@ SSR over a client-side SPA (user-approved deviation from the original doc).
 - `static/js/login.js`, `admin.js` (logout + dashboard delete + editor),
   `uploads.js` (editor upload panel: copy URL / درج در متن),
   `admin-assets.js` (library page), `trash.js` (restore/purge/cleanup),
-  `report.js` (copy-code with mobile execCommand fallback + lightbox),
-  `theme.js` (dark/light theme bootstrap + header toggle).
+  `report.js` (copy-code with mobile execCommand fallback, lightbox, print/PDF
+  handler), `theme.js` (dark/light theme bootstrap + header toggle).
 - **Theme system**: dark is the default and is applied by `theme.js` in
   `<head>` before first paint (`data-theme` on `<html>`); the header toggle
   persists the choice in `localStorage` (`gk-theme`). All colors are CSS
@@ -299,13 +302,44 @@ Root causes found after phase 7:
   in Chromium at 320/390 px (plus 768/1440/1920 for the public pages): no
   horizontal overflow anywhere.
 
+## 12c. Phase 9 — syntax highlighting + print/PDF (2026-10-20)
+
+- **Highlighting** runs in the shared renderer (`src/lib/renderer.js`), not in
+  the browser: `highlight.js/lib/core` plus 17 registered grammars (c, cpp,
+  arduino, python, bash, shell, verilog, vhdl, matlab, json, javascript, sql,
+  makefile, diff, yaml, xml, plaintext). Output is class-based (`hljs-*`), so
+  the strict CSP is untouched and the copy button still copies raw text.
+  Unknown languages (e.g. SPICE netlists) fall back to the old escaped block;
+  the fence info string is validated before it reaches the class attribute.
+  Token colors are CSS variables tuned to the always-dark code card (they also
+  work in light mode because code blocks stay dark there).
+- **PDF is the browser's print pipeline**, not a server renderer: a
+  «چاپ / PDF» button in the report toolbar calls `window.print()` after fonts
+  and lazy images are ready, and temporarily sets `document.title` to the
+  report title so the saved file gets a clean name. `@media print` supplies
+  `@page { size: A4; margin: 15mm 14mm }`, forces the light palette, hides
+  site chrome/toolbar/copy buttons, wraps code instead of clipping it, keeps
+  rows/images/code cards unbroken, and repeats table headers on every page.
+  A server-side PDF would need Cloudflare Browser Rendering (paid) or an
+  external service; JS PDF libs cannot shape Persian RTL text well.
+- **Verification**: 30 unit tests; local Chromium (Playwright) screenshots in
+  dark/light at 390/1440; print-media screenshots; a real A4 PDF generated
+  with `page.pdf()` (MediaBox 594.96×841.92 pt, 4 pages) and rasterized with
+  poppler to inspect pagination, repeated table headers, and margins;
+  46/46 smoke on local and production.
+- **Known limitation**: Chrome/Safari do not let CSS add page numbers to the
+  page margin; users can enable the print dialog's header/footer option. PDF
+  filename/margins depend on the dialog ("Default" margins respect `@page`).
+- Bundle grew to ~500 KB uncompressed (~1.4 MB with sourcemap) after adding
+  the grammars — well inside the Workers limit.
+
 ## 13. Open items / manual checklist
 
 - **Deployed (2026-10-20)**: D1 created + migrated, KV namespace created,
   secrets set (`ADMIN_PASSWORD_HASH` for the account owner's chosen password,
   fresh random `SESSION_SECRET`), Worker live at
-  https://gozaresh-kar.parsamirzaagha0.workers.dev — 44/44 smoke checks passed
-  against production (re-run after phase 8).
+  https://gozaresh-kar.parsamirzaagha0.workers.dev — 46/46 smoke checks passed
+  against production (re-run after phase 9).
 - Layout was verified with a local Chromium (Playwright headless, phone
   emulation at 320/390 px and desktop at 768/1440/1920 px): zero horizontal
   overflow and screenshots reviewed for home, report, editor upload panel and
@@ -314,7 +348,12 @@ Root causes found after phase 7:
 - If the Chromium binary in a fresh sandbox reports missing `libglib`/font
   errors, the workaround used here was extracting the needed Debian packages
   into `/tmp` and running with `LD_LIBRARY_PATH` + a minimal
-  `FONTCONFIG_FILE` — no system install required.
+  `FONTCONFIG_FILE` — no system install required. `apt-get install
+  --download-only chromium` (plus `poppler-utils` to rasterize PDFs)
+  resolves every dependency without root.
+- **Print check to do once on a real device**: report → «چاپ / PDF» → confirm
+  A4 with "Default" margins, header/footer off if unwanted, and that
+  multi-page tables repeat their header row.
 - The KV-orphan sweep (`sweepOrphanR2Objects`, historical name kept) runs on
   every cleanup call; the "young object spared" sub-branch can't be forced
   locally (KV metadata timestamps can't be backdated) — production cleanup
@@ -329,14 +368,16 @@ Root causes found after phase 7:
 - Git: initial commit `0a581ca` on `master` (2026-10-20) contains the full
   project; keep `HANDOFF.md` in the same commit as behavior changes.
 - Optional future work (explicitly out of scope for v1): direct-to-storage
-  uploads, syntax highlighting, image processing, multi-user admin.
+  uploads, image processing, multi-user admin, a custom SPICE grammar, a
+  one-click PDF (needs paid Browser Rendering or an external service).
 
 ## 14. Decisions log (do not re-litigate casually)
 
 1. SSR in the Worker for public pages + preview via API (one renderer, SEO,
    link previews) — user-approved deviation from the initial client-side plan.
-2. Plain JS (ESM), no TS, no bundler; markdown-it is the only runtime dep and
-   is bundled by Wrangler (no vendored copy needed once SSR was chosen).
+2. Plain JS (ESM), no TS, no bundler; markdown-it + highlight.js are the only
+   runtime deps and are bundled by Wrangler (no vendored copy needed once SSR
+   was chosen). Highlighting is server-side so preview and public pages match.
 3. wrangler.toml (TOML) — all needed keys verified against Wrangler 4.x docs;
    re-verify if Wrangler starts gating features behind `wrangler.jsonc`.
 4. Slugs: random unambiguous 12-char IDs (user chose "easiest option").
@@ -347,3 +388,7 @@ Root causes found after phase 7:
    requires one. KV trade-offs accepted: 25 MiB max value, eventual
    consistency (~60 s), 1000 free writes/day — all fine for a single-admin
    site's usage pattern.
+7. PDF export is client-side print-to-PDF (2026-10-20): an A4 `@media print`
+   stylesheet plus a button. No server PDF engine — Workers cannot run
+   Chromium on the free plan, and JS PDF libs cannot shape Persian RTL text.
+   The print artifact is always light/ink-friendly even when the site is dark.

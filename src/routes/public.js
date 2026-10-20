@@ -177,7 +177,10 @@ route("GET", "/reports/:slug", async (request, env, params) => {
     .join(" ");
 
   const body = `<article class="markdown-body" dir="rtl">
-  <nav class="crumbs"><a href="/">بازگشت به فهرست گزارش‌ها</a></nav>
+  <div class="report-toolbar">
+    <nav class="crumbs"><a href="/">بازگشت به فهرست گزارش‌ها</a></nav>
+    <button type="button" id="print-report" class="btn btn-ghost btn-small" aria-label="چاپ یا ذخیره به‌صورت PDF">چاپ / PDF</button>
+  </div>
   <h1>${escapeHtml(row.title)}</h1>
   <div class="report-meta report-head-meta">
     <span>${escapeHtml(jalaliDate(row.created_at))}</span>

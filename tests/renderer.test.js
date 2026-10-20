@@ -86,11 +86,32 @@ test("image with data: URL is not rendered as an element", () => {
   assert.equal(out.includes("<img"), false);
 });
 
-test("fenced code block becomes LTR figure with escaped content", () => {
-  const out = renderMarkdown("```c\n#include <stdio.h>\n```");
+test("fenced code block becomes LTR figure with escaped, highlighted content", () => {
+  const out = renderMarkdown("```c\n#include <stdio.h>\nint main() { return 0; }\n```");
   assert.equal(out.includes("<figure class=\"code-block\" dir=\"ltr\">"), true);
   assert.equal(out.includes("&lt;stdio.h&gt;"), true);
-  assert.equal(out.includes('class="language-c"'), true);
+  assert.equal(out.includes('class="hljs language-c"'), true);
+  assert.match(out, /<span class="hljs-keyword">return<\/span>/);
+  assert.equal(out.includes("style="), false);
+});
+
+test("code content stays escaped after highlighting", () => {
+  const out = renderMarkdown("```c\nchar *s = \"<script>alert(1)</script>\";\n```");
+  assert.equal(out.includes("<script>"), false);
+  assert.equal(out.includes("&lt;script&gt;"), true);
+});
+
+test("unknown languages fall back to plain escaped text", () => {
+  const out = renderMarkdown("```spice\nR1 1 2 10k\n```");
+  assert.equal(out.includes('class="hljs language-spice"'), true);
+  assert.equal(out.includes("<span class=\"hljs-"), false);
+  assert.equal(out.includes("R1 1 2 10k"), true);
+});
+
+test("fence info cannot inject attributes or markup", () => {
+  const out = renderMarkdown('```"><script>\nR1\n```');
+  assert.equal(out.includes("<script>"), false);
+  assert.equal(out.includes('language-text'), true);
 });
 
 test("indented code block also wrapped in code-block figure", () => {
