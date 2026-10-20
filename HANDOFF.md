@@ -318,8 +318,8 @@ Root causes found after phase 7:
   (observed once during prod smoke); if it becomes chronic for the audience,
   attach a custom domain (Workers dashboard → Domains & Routes) — code and
   config need no changes.
-- Git: repository initialized, **no commits yet** — commit history should be
-  started from this state.
+- Git: initial commit `0a581ca` on `master` (2026-10-20) contains the full
+  project; keep `HANDOFF.md` in the same commit as behavior changes.
 - Optional future work (explicitly out of scope for v1): direct-to-storage
   uploads, syntax highlighting, image processing, multi-user admin.
 
