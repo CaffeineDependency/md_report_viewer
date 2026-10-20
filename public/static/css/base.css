@@ -105,8 +105,8 @@ main {
 
 .container {
   /* Fluid gutters: comfortable on a 360px phone, generous on desktop.
-     Exposed as a custom property so edge-to-edge blocks (wide tables on
-     phones) can cancel them out exactly. */
+     Exposed as a custom property so any full-width block can cancel them
+     out deliberately. */
   --gutter: clamp(0.9rem, 3.5vw, 1.75rem);
   width: 100%;
   max-width: 56rem;
@@ -933,6 +933,9 @@ a.chip:hover {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
   margin: 1.2rem 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .table-wrap::-webkit-scrollbar {
@@ -967,6 +970,26 @@ a.chip:hover {
 
 .markdown-body thead {
   background: var(--primary-soft);
+}
+
+/* The wrapper is the card border; drop the table's own outer border so it
+   does not draw a second line right next to it. */
+.markdown-body th:first-child,
+.markdown-body td:first-child {
+  border-inline-start: 0;
+}
+
+.markdown-body th:last-child,
+.markdown-body td:last-child {
+  border-inline-end: 0;
+}
+
+.markdown-body thead tr:first-child th {
+  border-block-start: 0;
+}
+
+.markdown-body tbody tr:last-child td {
+  border-block-end: 0;
 }
 
 .markdown-body hr {
@@ -1043,18 +1066,6 @@ a.chip:hover {
 
   .stats {
     flex-direction: column;
-  }
-
-  /* Wide report content goes edge-to-edge on phones, reclaiming the
-     gutters for tables and code. Each block still scrolls internally. */
-  .table-wrap,
-  .code-block {
-    margin-inline: calc(var(--gutter) * -1);
-    border-radius: 0;
-  }
-
-  .code-block {
-    border-inline: 0;
   }
 
   /* Denser tables so wide truth tables need far less sideways swiping. */

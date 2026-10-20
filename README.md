@@ -23,9 +23,10 @@ Step-by-step production deployment: see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - **Themes**: dark by default with a header toggle (choice remembered); teal
   accent in both palettes.
 - **Responsive by design**: a purpose-built phone layout and a wide desktop
-  layout — not one squeezed into the other. Phones get full-bleed, swipeable
-  tables (with a Persian "swipe" hint that only appears when needed), stacked
-  upload/asset rows and ≥44px tap targets; desktops get a 74–80rem shell,
+  layout — not one squeezed into the other. Phones get inset, rounded
+  table/code cards that scroll inside themselves (with a Persian "swipe" hint
+  that only appears when needed), stacked upload/asset rows and ≥44px tap
+  targets; desktops get a 74–80rem shell,
   a multi-column home and a 50rem reading column. Checked at 320, 390, 768,
   1440 and 1920 px.
 - **Search**: title/tag substring search and category chips on the homepage.

@@ -35,7 +35,7 @@ Personas:
 | 5 | Search/category filter, lightbox, copy-code, favicon, polish | ✅ done, live-verified (+prod) |
 | 6 | Smoke script, README, deployment guide, real deployment | ✅ done — LIVE at https://gozaresh-kar.parsamirzaagha0.workers.dev |
 | 7 | UI overhaul: dark theme (default) + toggle, teal accent, phone overflow fixes, desktop home grid, dashboard delete bug | ✅ done, live-verified (44/44 smoke on prod) |
-| 8 | Responsive pass: real desktop layout (auto-fit grid, 74–80rem shell), phone report redesign (edge-to-edge tables, denser cells, swipe hint), page-wide overflow guard | ✅ done, live-verified (44/44 smoke on prod) |
+| 8 | Responsive pass: real desktop layout (auto-fit grid, 74–80rem shell), phone report redesign (inset rounded table/code cards, denser cells, swipe hint), page-wide overflow guard | ✅ done, live-verified (44/44 smoke on prod) |
 
 Everything verified locally against `wrangler dev` and then re-verified
 against the live production Worker (44-check smoke suite: 44/44 on both).
@@ -200,7 +200,12 @@ SSR over a client-side SPA (user-approved deviation from the original doc).
   instead of leaving empty tracks, and a lone report becomes a horizontal row
   on desktop (`:only-child`). Gutters are fluid
   (`--gutter: clamp(.9rem, 3.5vw, 1.75rem)`) and exposed as a custom property
-  so phone-wide tables/code can go edge-to-edge by cancelling them.
+  so any future full-width block can deliberately cancel it.
+- **Tables are cards at every width**: `.table-wrap` is the card
+  (`--surface`, 1px border, radius, internal horizontal scroll) and the
+  table's own outer cell border is dropped so the two edges don't double up.
+  Phones keep the normal gutters — an earlier full-bleed experiment was
+  reverted because edge-to-edge tables/code looked glued to the screen.
 - **No page-wide horizontal scroll**: `html { overflow-x: clip }` (unlike
   `hidden`, `clip` is not a scroll container, so the sticky header keeps
   working). Wide tables and code scroll inside their own wrappers; on phones
@@ -274,10 +279,13 @@ Root causes found after phase 7:
   (three are 16 columns), so wide tables were the real trigger — people
   zoomed out to see them, and in RTL the zoomed-out page collapses into a
   right-hand strip (the "header only in the top-right corner" symptom). Fixes:
-  page-level `overflow-x: clip`, edge-to-edge table/code blocks on phones,
-  denser table cells (0.82rem), smaller phone typography (0.97rem body,
-  tighter headings), and a JS-inserted swipe hint that only appears for
-  tables that actually overflow.
+  page-level `overflow-x: clip`, denser table cells (0.82rem), smaller phone
+  typography (0.97rem body, tighter headings), and a JS-inserted swipe hint
+  that only appears for tables that actually overflow.
+- **Table/code presentation**: tables and code blocks are inset rounded cards
+  on phones and desktop alike (full-bleed was tried, then reverted as ugly);
+  the table wrapper draws the card border and outer cell borders are removed
+  to keep a single clean edge.
 - Fluidity: `--gutter` clamps 0.9→1.75rem, so 320px phones and 1920px screens
   both get sane margins; scrollbars on table/code wrappers are thin and themed.
 - Not a page-width bug: Android Chrome (Blink) was in use, not WebKit, so the
