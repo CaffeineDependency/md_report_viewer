@@ -80,7 +80,13 @@ console.log(`smoke: ${BASE}`);
   const res = await fetch(BASE + "/");
   const text = await res.text();
   check("home 200 + dir=rtl", res.status === 200 && text.includes('dir="rtl"'));
-  check("home CSP", (res.headers.get("content-security-policy") || "").includes("default-src 'none'"));
+  const homeCsp = res.headers.get("content-security-policy") || "";
+  check(
+    "home CSP: remote images allowed, scripts locked",
+    homeCsp.includes("default-src 'none'") &&
+      homeCsp.includes("img-src 'self' https: http:") &&
+      homeCsp.includes("script-src 'self'")
+  );
   check("home Persian content", text.includes("فهرست گزارش‌های آزمایش"));
 }
 
@@ -180,7 +186,19 @@ let IMG_URL;
   exe.append("kind", "file");
   exe.append("file", new Blob([PNG_BYTES], { type: "application/octet-stream" }), "virus.exe");
   const up3 = await upload(COOKIE, exe);
-  check(".exe rejected", up3.status === 400);
+  const exeBody = await jsonOf(up3);
+  check(".exe accepted as a downloadable file", up3.status === 201 && /^\/files\//.test(exeBody.url || ""));
+  if (exeBody.id) {
+    const exeServe = await fetch(BASE + exeBody.url);
+    check(
+      ".exe served as octet-stream attachment + nosniff",
+      exeServe.status === 200 &&
+        exeServe.headers.get("content-type") === "application/octet-stream" &&
+        (exeServe.headers.get("content-disposition") || "").includes("attachment") &&
+        exeServe.headers.get("x-content-type-options") === "nosniff"
+    );
+    await api("DELETE", "/api/assets/" + exeBody.id, COOKIE, undefined);
+  }
 
   const big = new FormData();
   big.append("kind", "image");
@@ -205,6 +223,49 @@ let FILE_URL;
     "file serve attachment",
     serve.status === 200 && (serve.headers.get("content-disposition") || "").includes("attachment")
   );
+
+  // Extensionless upload (previously rejected by the allowlist).
+  const noext = new FormData();
+  noext.append("kind", "file");
+  noext.append("file", new Blob(["all:\n"], { type: "text/plain" }), "Makefile");
+  const noextUp = await upload(COOKIE, noext);
+  const noextBody = await jsonOf(noextUp);
+  check(
+    "extensionless file accepted",
+    noextUp.status === 201 && /^\/files\//.test(noextBody.url || "")
+  );
+  if (noextBody.id) {
+    const noextServe = await fetch(BASE + noextBody.url);
+    check(
+      "extensionless file serves as attachment",
+      noextServe.status === 200 &&
+        (noextServe.headers.get("content-disposition") || "").includes("attachment") &&
+        noextServe.headers.get("content-type") === "application/octet-stream"
+    );
+    await api("DELETE", "/api/assets/" + noextBody.id, COOKIE, undefined);
+  }
+
+  // An uploaded HTML file must never be served as HTML.
+  const htmlForm = new FormData();
+  htmlForm.append("kind", "file");
+  htmlForm.append("file", new Blob(["<script>alert(1)</script>"], { type: "text/html" }), "evil.html");
+  const htmlUp = await upload(COOKIE, htmlForm);
+  const htmlBody = await jsonOf(htmlUp);
+  check(
+    "html upload stored as generic download",
+    htmlUp.status === 201 && htmlBody.content_type === "application/octet-stream"
+  );
+  if (htmlBody.id) {
+    const htmlServe = await fetch(BASE + htmlBody.url);
+    check(
+      "html download headers are inert",
+      htmlServe.status === 200 &&
+        htmlServe.headers.get("content-type") === "application/octet-stream" &&
+        (htmlServe.headers.get("content-disposition") || "").includes("attachment") &&
+        htmlServe.headers.get("x-content-type-options") === "nosniff"
+    );
+    await api("DELETE", "/api/assets/" + htmlBody.id, COOKIE, undefined);
+  }
 }
 
 // ---------------------------------------- publish + public page + edit path

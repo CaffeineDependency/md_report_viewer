@@ -49,15 +49,9 @@ export function sniffImage(bytes) {
 
 // ------------------------------------------------------------ file types
 
-// Lab-report friendly extensions. Additions go through code review; the list
-// is allow-by-default-fail (anything NOT listed is rejected).
-export const FILE_EXTENSIONS = new Set([
-  "pdf", "zip",
-  "c", "cpp", "cc", "cxx", "h", "hpp",
-  "py", "sh", "bash", "txt", "md", "csv", "json", "hex", "asm",
-  "v", "sv", "vhd", "vhdl",
-  "pdsprj", "pdszx", "dsn", "ops", "cfg", "ino", "s",
-]);
+// Any file extension (or none) is accepted. The content type is still
+// chosen safely below: known text/code extensions are served as text/plain,
+// everything else as application/octet-stream — never HTML.
 
 /** Safe content type for serving; never HTML-like. */
 export function fileContentType(ext) {

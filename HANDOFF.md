@@ -37,9 +37,10 @@ Personas:
 | 7 | UI overhaul: dark theme (default) + toggle, teal accent, phone overflow fixes, desktop home grid, dashboard delete bug | ✅ done, live-verified (44/44 smoke on prod) |
 | 8 | Responsive pass: real desktop layout (auto-fit grid, 74–80rem shell), phone report redesign (inset rounded table/code cards, denser cells, swipe hint), page-wide overflow guard | ✅ done, live-verified (44/44 smoke on prod) |
 | 9 | Syntax highlighting (highlight.js, server-side) + print/PDF export (A4 print stylesheet, light theme, colored code) | ✅ done, live-verified (46/46 smoke on prod) |
+| 10 | Remote images allowed (any http/https host) + any file type uploads (extensionless included) | ✅ done, live-verified (51/51 smoke on prod) |
 
 Everything verified locally against `wrangler dev` and then re-verified
-against the live production Worker (46-check smoke suite: 46/46 on both).
+against the live production Worker (51-check smoke suite: 51/51 on both).
 Remaining open items and manual browser checks — see §13.
 
 ## 3. Architecture on Cloudflare
@@ -144,16 +145,22 @@ regenerated never; collisions on create are retried (5 attempts, 62⁻¹² odds)
   rejected. Fenced/indented code becomes LTR `<figure class="code-block">`;
   external links get `rel="noopener noreferrer"` and LTR direction.
 - **CSP on every HTML response**: `default-src 'none'; script-src 'self';
-  style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self';
-  frame-ancestors 'none'; base-uri 'none'; form-action 'self'` — no inline
-  scripts anywhere. Plus `nosniff`, `Referrer-Policy`, `X-Frame-Options`.
+  style-src 'self'; img-src 'self' https: http:; font-src 'self';
+  connect-src 'self'; frame-ancestors 'none'; base-uri 'none';
+  form-action 'self'` — no inline scripts anywhere; remote images are the one
+  deliberate exception (2026-10-20), so Markdown can embed any http(s) image.
+  Report images carry `referrerpolicy="no-referrer"`. Plus `nosniff`,
+  `Referrer-Policy`, `X-Frame-Options`.
 - **Assets**: images verified by magic bytes only (PNG/JPEG/WebP/GIF; SVG
-  rejected); files allowlisted by extension (pdf, zip, c/cpp/h, py, sh, txt,
-  md, csv, v/vhd, pdsprj/pdszx/dsn/ops, …). Filenames sanitized; KV keys are
-  always server-generated UUIDs; values capped at 25 MiB (KV limit). Uploads require auth + CSRF; sizes capped
-  (10 MB images / 25 MB files, configurable in `[vars]`). Downloads:
-  `Content-Disposition: attachment` (files only), safe `Content-Type`,
-  `nosniff`, CSP `default-src 'none'`, year-long immutable cache (safe
+  rejected as an inline image); **downloadable files accept any type**, any
+  extension or none (the old extension allowlist was removed 2026-10-20).
+  Uploaded files are typed safely at serve time: known code/text extensions →
+  `text/plain; charset=utf-8`, everything else (including `.exe`, `.html`,
+  extensionless) → `application/octet-stream`, always
+  `Content-Disposition: attachment` + `nosniff`, never HTML. Filenames
+  sanitized; KV keys are always server-generated UUIDs; values capped at
+  25 MiB (KV limit). Uploads require auth + CSRF; sizes capped (10 MB images /
+  25 MB files, configurable in `[vars]`). Year-long immutable cache (safe
   because object IDs/keys are never reused).
 
 ## 7. Asset lifecycle (deletion is idempotent)
@@ -333,13 +340,38 @@ Root causes found after phase 7:
 - Bundle grew to ~500 KB uncompressed (~1.4 MB with sourcemap) after adding
   the grammars — well inside the Workers limit.
 
+## 12d. Phase 10 — remote images + open file types (2026-10-20)
+
+- **Why remote images used to fail**: GitHub raw is hotlinkable (verified
+  `200`, `image/png`, `access-control-allow-origin: *`); the block was our CSP
+  `img-src 'self'`. Since the site has one trusted admin, that restriction was
+  removed for images only: `img-src 'self' https: http:`. Scripts, styles,
+  forms, frames and `connect-src` remain locked, so a Markdown/XSS mistake
+  still cannot execute or exfiltrate. Renderer adds
+  `referrerpolicy="no-referrer"` to report images.
+- **Caveats**: hosts with hotlink protection, plain-`http` images on the
+  HTTPS site (mixed content), auth-gated URLs, and plain
+  `github.com/…/blob/…` links (HTML pages, not images) still fail. Remote
+  images need network access at print time; uploads remain the durable option.
+- **Files**: the extension allowlist (`FILE_EXTENSIONS`) was removed. Any
+  upload, extensionless included, is accepted; the safety property is at
+  serve time (`application/octet-stream` + attachment + nosniff for
+  everything not known text/code), so an uploaded HTML/executable still cannot
+  run. UI hints updated. Images are still magic-byte checked, so SVG is a
+  downloadable file, not an inline image.
+- **Verification**: 32 unit tests; local Chromium loaded a
+  `raw.githubusercontent.com` PNG (`naturalWidth: 288`, no console CSP
+  errors) and rendered it in a generated PDF; smoke covers an uploaded
+  `.exe`, `.html`, and an extensionless `Makefile`, all served as inert
+  attachments; 51/51 smoke locally and on production.
+
 ## 13. Open items / manual checklist
 
 - **Deployed (2026-10-20)**: D1 created + migrated, KV namespace created,
   secrets set (`ADMIN_PASSWORD_HASH` for the account owner's chosen password,
   fresh random `SESSION_SECRET`), Worker live at
-  https://gozaresh-kar.parsamirzaagha0.workers.dev — 46/46 smoke checks passed
-  against production (re-run after phase 9).
+  https://gozaresh-kar.parsamirzaagha0.workers.dev — 51/51 smoke checks passed
+  against production (re-run after phase 10).
 - Layout was verified with a local Chromium (Playwright headless, phone
   emulation at 320/390 px and desktop at 768/1440/1920 px): zero horizontal
   overflow and screenshots reviewed for home, report, editor upload panel and
@@ -392,3 +424,8 @@ Root causes found after phase 7:
    stylesheet plus a button. No server PDF engine — Workers cannot run
    Chromium on the free plan, and JS PDF libs cannot shape Persian RTL text.
    The print artifact is always light/ink-friendly even when the site is dark.
+8. Images may come from any http(s) host (2026-10-20): `img-src 'self'
+   https: http:` + `referrerpolicy="no-referrer"`. The rest of the CSP stays
+   strict (`default-src 'none'`, self-only scripts/styles/connects). File
+   uploads are **not** extension-filtered — any type/extensionless is allowed,
+   served only as an inert attachment (octet-stream/plain + nosniff).

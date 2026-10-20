@@ -15,9 +15,15 @@ Step-by-step production deployment: see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
   site), categories, comma-separated tags, publish/unpublish, trash with
   restore, permanent delete that also cleans up unreferenced files.
 - **Assets**: image uploads (PNG/JPEG/WebP/GIF, verified by magic bytes) and
-  project/source files (pdf, zip, c/cpp/h, py, txt, csv, Proteus projects, …)
-  stored in Workers KV (no payment method required, unlike R2); never
-  delivered with an executable/HTML content type.
+  **any downloadable file** — any extension or none at all (pdf, zip, source,
+  Proteus projects, extensionless data files, …) — stored in Workers KV (no
+  payment method required, unlike R2). Downloads are always attachments with a
+  non-executable content type and `nosniff`, so HTML/executables cannot run.
+- **Remote images**: Markdown may embed images from any `https`/`http` host
+  (GitHub raw, image CDNs, etc.); they render in preview, public pages and
+  PDFs, with `referrerpolicy="no-referrer"`. Hosts that block hotlinking,
+  plain-HTTP images on the HTTPS site, private links and GitHub *blob* pages
+  (use raw URLs) are the exceptions.
 - **Persian-first**: RTL layout, Vazirmatn font (self-hosted), Jalali dates,
   Persian UI strings and error messages.
 - **Themes**: dark by default with a header toggle (choice remembered); teal
@@ -65,7 +71,7 @@ node -e "console.log(crypto.randomBytes(32).toString('base64url'))"  # SESSION_S
 |---|---|
 | `npm run dev` | `wrangler dev` on <http://localhost:8787> |
 | `npm test` | unit tests (markdown renderer, asset validation) |
-| `npm run smoke` | 46-check end-to-end test against a running `wrangler dev` (works against production too) |
+| `npm run smoke` | 51-check end-to-end test against a running `wrangler dev` (works against production too) |
 | `npm run deploy` | deploy Worker + assets + bindings config to Cloudflare |
 | `node scripts/hash-password.mjs <pw>` | generate `ADMIN_PASSWORD_HASH` |
 
@@ -100,7 +106,7 @@ table; deleting a report purges bytes that no other report references; a
   so it cannot be raised while assets live in KV.
 - Larger files: host them elsewhere (e.g. Google Drive set to "anyone with
   the link") and link them from the Markdown — normal links just work. Remote
-  *images* are blocked by the CSP (`img-src 'self'`), so screenshots should be
-  uploaded here; Drive also blocks hotlinking.
+  images can be embedded directly, but many hosts (including Google Drive)
+  block hotlinking; uploading them here is still the most reliable option.
 - No multi-user, no comments, no AI integration; PDF export uses the browser's
   print dialog (no server-side PDF engine).

@@ -14,7 +14,6 @@ import {
 } from "../config.js";
 import {
   AssetError,
-  FILE_EXTENSIONS,
   contentDisposition,
   fileContentType,
   fileKey,
@@ -110,11 +109,8 @@ route("POST", "/api/assets", async (request, env) => {
         );
       }
       const ext = filenameExt(clientName);
-      if (!FILE_EXTENSIONS.has(ext)) {
-        throw new AssetError(
-          "پسوند فایل مجاز نیست؛ در فهرست پسوندهای مجاز فقط انواع پروژه آزمایشگاه و متن مجاز است."
-        );
-      }
+      // Any file type is accepted; serving is always an attachment with a
+      // non-HTML content type + nosniff, so nothing can execute in the site.
       if (!originalFilename || originalFilename === "file") {
         originalFilename = "project-file" + (ext ? "." + ext : "");
       }

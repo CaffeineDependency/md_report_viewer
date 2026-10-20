@@ -112,7 +112,7 @@ route("GET", "/admin/assets", async (request, env) => {
   </div>
   <div class="card upload-box">
     <h2>بارگذاری فایل قابل دانلود</h2>
-    <p class="muted">پسوندهای مجاز: pdf، zip، c، cpp، h، py، sh، txt، md، csv، v، vhd، pdsprj و موارد مشابه فهرست‌شده در راهنما.</p>
+    <p class="muted">هر نوع فایلی پذیرفته می‌شود، با یا بدون پسوند (به‌صورت پیوست دانلود می‌شود)؛ حداکثر حجم مطابق تنظیمات سرور.</p>
     <label class="upload-label">
       <input type="file" id="library-file-input">
     </label>

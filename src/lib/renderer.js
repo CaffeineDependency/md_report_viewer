@@ -144,7 +144,7 @@ function makeRenderer() {
     );
     return (
       `<img src="${md.utils.escapeHtml(src)}" alt="${alt}" ` +
-      `class="report-img" loading="lazy" dir="ltr">`
+      `class="report-img" loading="lazy" referrerpolicy="no-referrer" dir="ltr">`
     );
   };
 

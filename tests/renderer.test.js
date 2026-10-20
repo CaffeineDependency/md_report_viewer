@@ -11,6 +11,7 @@ import {
   renderMarkdown,
   markdownExcerpt,
 } from "../src/lib/renderer.js";
+import { SECURITY_HEADERS } from "../src/lib/html.js";
 
 // ---------------------------------------------------------------- URLs
 
@@ -129,6 +130,19 @@ test("external https links get noopener and LTR direction", () => {
   const out = renderMarkdown("[سایت](https://example.com)");
   assert.equal(out.includes('rel="noopener noreferrer"'), true);
   assert.equal(out.includes('target="_blank"'), true);
+});
+
+test("CSP allows remote images but keeps scripts/styles locked down", () => {
+  const csp = SECURITY_HEADERS["Content-Security-Policy"];
+  assert.equal(csp.includes("img-src 'self' https: http:"), true);
+  assert.equal(csp.includes("script-src 'self'"), true);
+  assert.equal(csp.includes("style-src 'self'"), true);
+  assert.equal(csp.includes("default-src 'none'"), true);
+});
+
+test("report images ask remote hosts not to receive the page URL", () => {
+  const out = renderMarkdown("![x](https://raw.githubusercontent.com/a/b/main/x.png)");
+  assert.equal(out.includes('referrerpolicy="no-referrer"'), true);
 });
 
 test("onerror injection via image title never becomes an attribute", () => {
