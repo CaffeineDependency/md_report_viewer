@@ -1,0 +1,5 @@
+# Security headers applied to static asset responses (the Worker adds the CSP
+# and the rest on all HTML responses it renders).
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

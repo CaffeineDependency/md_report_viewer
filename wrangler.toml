@@ -1,0 +1,53 @@
+# Wrangler config for gozaresh-kar.
+# Local development works as-is: bindings without IDs are auto-provisioned locally.
+# For production deployment, follow docs/DEPLOYMENT.md (created in phase 6):
+# run `wrangler d1 create` / `wrangler kv namespace create` and paste the
+# returned IDs below. Secrets are set via `wrangler secret put` (see
+# .dev.vars.example for the local equivalents).
+
+name = "gozaresh-kar"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+# --- D1: report metadata, markdown content, asset metadata, login attempts ---
+[[d1_databases]]
+binding = "DB"
+database_name = "gozaresh-kar-db"
+database_id = "88cbfa08-38f5-41b2-b0fe-2a71ba35241f"
+migrations_dir = "migrations"
+
+# --- KV: image and file bytes (never store bytes in D1).
+# Chosen over R2 because the target account has no payment method: KV is part
+# of the Workers free plan. Free-tier allowances: 1 GB storage, 1000
+# writes/day, 100k reads/day; values up to 25 MiB; writes settle globally
+# within ~60s (eventual consistency). ---
+[[kv_namespaces]]
+binding = "BUCKET"
+id = "f915ebc7e3c8447da7c60d3f186041b2"
+
+# --- Static assets: frontend is served directly by Cloudflare; only the
+# dynamic paths below run the Worker first. There is intentionally NO SPA
+# fallback: public report pages are server-rendered by the Worker. ---
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = [
+    "/",
+    "/login",
+    "/reports/*",
+    "/images/*",
+    "/files/*",
+    "/api/*",
+    "/admin",
+    "/admin/*",
+]
+
+# --- Non-secret runtime configuration (secrets use `wrangler secret put`) ---
+[vars]
+MAX_IMAGE_MB = "10"
+MAX_FILE_MB = "25"
+SESSION_TTL_HOURS = "168"
+
+[observability]
+enabled = true

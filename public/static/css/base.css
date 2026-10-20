@@ -1,0 +1,1197 @@
+/* Global styles — Persian-first RTL design. Layout only via CSS logical
+   properties (margin-inline-start, padding-block, ...). Technical content
+   (code, filenames, URLs) is LTR-isolated where needed (added in later phases
+   alongside the markdown styles). */
+
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/static/fonts/Vazirmatn-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/static/fonts/Vazirmatn-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Theme variables. Dark is the default (user preference); `data-theme="light"`
+   overrides. Accent is teal — deliberately not blue. */
+:root,
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b1215;
+  --surface: #121b1f;
+  --surface-2: #17242a;
+  --input-bg: #0e171b;
+  --text: #e6edf0;
+  --text-soft: #93a4ab;
+  --primary: #2dd4bf;
+  --primary-hover: #5eead4;
+  --primary-soft: rgba(45, 212, 191, 0.14);
+  --on-primary: #06201c;
+  --border: #223138;
+  --danger: #f87171;
+  --danger-hover: #fca5a5;
+  --on-danger: #2a0a0a;
+  --success-bg: rgba(52, 211, 153, 0.16);
+  --success-text: #6ee7b7;
+  --code-bg: #0f181c;
+  --code-head-bg: #142125;
+  --code-text: #d6e2e6;
+  --code-muted: #7f939b;
+  --code-border: #223138;
+  --radius: 10px;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3f6f6;
+  --surface: #ffffff;
+  --surface-2: #f8fafa;
+  --input-bg: #ffffff;
+  --text: #1c2529;
+  --text-soft: #5d6b71;
+  --primary: #0f766e;
+  --primary-hover: #115e59;
+  --primary-soft: #d9f2ee;
+  --on-primary: #ffffff;
+  --border: #e2e8e8;
+  --danger: #b91c1c;
+  --danger-hover: #991b1b;
+  --on-danger: #ffffff;
+  --success-bg: #dcfce7;
+  --success-text: #166534;
+  --code-bg: #0f172a;
+  --code-head-bg: #1e293b;
+  --code-text: #e2e8f0;
+  --code-muted: #94a3b8;
+  --code-border: #334155;
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  /* Page-level guard: a stray wide child must never widen the document.
+     `clip` (unlike `hidden`) does not create a scroll container, so the
+     sticky header keeps working. Wide content scrolls in its own wrapper. */
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+body {
+  margin: 0;
+  font-family: "Vazirmatn", Tahoma, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+main {
+  flex: 1;
+}
+
+.container {
+  /* Fluid gutters: comfortable on a 360px phone, generous on desktop.
+     Exposed as a custom property so edge-to-edge blocks (wide tables on
+     phones) can cancel them out exactly. */
+  --gutter: clamp(0.9rem, 3.5vw, 1.75rem);
+  width: 100%;
+  max-width: 56rem;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ---------------------------------------------------------------- header */
+
+.site-header {
+  background: var(--surface);
+  color: var(--text);
+  border-block-end: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-block: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.brand {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.brand-sub {
+  color: var(--text-soft);
+  font-size: 0.85rem;
+}
+
+.site-nav {
+  margin-inline-start: auto;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.site-nav a {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+.site-nav a:hover {
+  color: var(--primary);
+}
+
+.nav-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0.35rem 0.9rem;
+  min-height: 2.75rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.nav-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ------------------------------------------------------------------ main */
+
+main {
+  padding-block: 1.5rem 2.5rem;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin-block: 0.25rem 1rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+
+.muted {
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+a {
+  color: var(--primary);
+}
+
+/* ------------------------------------------------------------------ auth */
+
+.auth-card {
+  max-width: 22rem;
+  margin-inline: auto;
+}
+
+label {
+  display: block;
+  margin-block: 0.75rem 0.3rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+input[type="password"],
+input[type="text"],
+input[type="search"],
+textarea {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 1rem;
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius);
+  padding: 0.65rem 1.4rem;
+  min-height: 2.75rem;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  margin-block-start: 1rem;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn-ghost:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.form-error {
+  color: var(--danger);
+  font-size: 0.9rem;
+  margin-block-start: 0.75rem;
+}
+
+/* ------------------------------------------------------------ report list */
+
+.report-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  /* auto-fit (not auto-fill): with only one or two reports the empty tracks
+     collapse and the cards stretch, instead of huddling in a narrow column. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.report-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: border-color 0.15s ease;
+}
+
+.report-item:hover {
+  border-color: var(--primary);
+}
+
+.report-item a {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.report-item a:hover {
+  text-decoration: underline;
+}
+
+.report-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  margin-block-start: 0.4rem;
+}
+
+.chip {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-radius: 999px;
+  padding: 0.25rem 0.8rem;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+}
+
+/* ----------------------------------------------------------------- admin */
+
+.stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.5rem;
+  min-width: 10rem;
+}
+
+.stat-num {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.page-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.page-head .btn {
+  margin-block-start: 0;
+}
+
+.page-head h1 {
+  margin-block: 0;
+}
+
+.admin-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.9rem;
+}
+
+.report-admin-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.report-admin-item .report-meta {
+  margin-block-start: 0.25rem;
+}
+
+.admin-item-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-item-actions .btn {
+  margin-block-start: 0;
+}
+
+.chip-published {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.crumbs {
+  margin-block-end: 1rem;
+  font-size: 0.9rem;
+}
+
+/* ---------------------------------------------------------------- editor */
+
+.field-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.field-row > div {
+  flex: 1;
+  min-width: 14rem;
+}
+
+#report-markdown {
+  font-size: 1rem;
+  line-height: 2;
+  resize: vertical;
+  min-height: 24rem;
+  unicode-bidi: plaintext;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-block-start: 1rem;
+}
+
+.editor-actions .btn {
+  margin-block-start: 0;
+}
+
+.form-success {
+  color: var(--success-text);
+  font-size: 0.9rem;
+  margin-block-start: 0.75rem;
+}
+
+#preview-area {
+  margin-block-start: 1.5rem;
+}
+
+/* ------------------------------------------------------------- uploads */
+
+.btn-small {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: var(--on-danger);
+}
+
+.btn-danger:hover {
+  background: var(--danger-hover);
+}
+
+.page-head-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.upload-box,
+.upload-panel {
+  margin-block-end: 1rem;
+}
+
+input[type="file"] {
+  max-width: 100%;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text-soft);
+}
+
+input[type="file"]::file-selector-button {
+  font-family: inherit;
+  font-size: 0.85rem;
+  margin-inline-end: 0.6rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+input[type="file"]::file-selector-button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.upload-label input[type="file"] {
+  margin-block: 0.5rem;
+}
+
+.upload-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Buttons that wrap hidden file inputs */
+.upload-row label.btn {
+  cursor: pointer;
+  margin-block-start: 0;
+}
+
+.upload-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.6rem;
+}
+
+.upload-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem 0.75rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.8rem;
+}
+
+.upload-item .btn {
+  margin-block-start: 0;
+}
+
+.upload-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.upload-name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.upload-actions .btn {
+  margin-block-start: 0;
+}
+
+.upload-thumb {
+  height: 3rem;
+  max-height: 3rem;
+  width: auto;
+  max-width: 100%;
+  -o-object-fit: cover;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.upload-url {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  direction: ltr;
+  unicode-bidi: isolate;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------- asset library */
+
+.asset-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.9rem;
+  margin-block-start: 1rem;
+}
+
+.asset-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.asset-row .btn {
+  margin-block-start: 0;
+}
+
+.asset-thumb {
+  height: 4rem;
+  max-height: 4rem;
+  width: auto;
+  max-width: 7rem;
+  -o-object-fit: cover;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.asset-icon {
+  font-size: 0.8rem;
+  font-family: monospace;
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-radius: 6px;
+  padding: 0.5rem 0.55rem;
+  min-width: 3rem;
+  text-align: center;
+}
+
+.asset-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.asset-name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.asset-url {
+  max-width: 100%;
+}
+
+.asset-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.asset-actions .btn {
+  margin-block-start: 0;
+}
+
+/* ------------------------------------------------------ search & filters */
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-block-end: 1rem;
+}
+
+.search-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex: 1;
+  min-width: 16rem;
+  max-width: 26rem;
+}
+
+.search-form input[type="search"] {
+  flex: 1;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 0.95rem;
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+.search-form .btn {
+  margin-block-start: 0;
+  padding: 0.5rem 1rem;
+}
+
+.chips-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chip-active {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+a.chip {
+  text-decoration: none;
+}
+
+a.chip:hover {
+  background: var(--primary-hover);
+  color: var(--on-primary);
+}
+
+.clear-filters {
+  margin-block-end: 0.75rem;
+}
+
+.clear-filters a {
+  color: var(--primary);
+}
+
+/* ------------------------------------------------------------- lightbox */
+
+.lightbox-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(10, 15, 30, 0.85);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.lightbox-overlay.open {
+  display: flex;
+}
+
+.lightbox-img {
+  max-width: 92vw;
+  max-height: 88vh;
+  width: auto;
+  height: auto;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.lightbox-close {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.5rem 1.4rem;
+  cursor: pointer;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.markdown-body img.report-img {
+  cursor: zoom-in;
+}
+
+/* --------------------------------------------------- markdown report body */
+
+.markdown-body {
+  line-height: 2.05;
+  overflow-wrap: break-word;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  line-height: 1.6;
+  margin-block: 1.6rem 0.7rem;
+}
+
+.markdown-body h2 {
+  border-inline-end: 4px solid var(--primary-soft);
+  padding-inline-end: 0.6rem;
+  font-size: 1.3rem;
+}
+
+.markdown-body h3 {
+  font-size: 1.15rem;
+}
+
+.markdown-body p {
+  margin-block: 0.8rem;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-inline-start: 1.6rem;
+}
+
+.markdown-body a {
+  color: var(--primary);
+}
+
+.markdown-body blockquote {
+  border-inline-start: 4px solid var(--primary);
+  background: var(--primary-soft);
+  border-radius: var(--radius);
+  margin: 1rem 0;
+  padding: 0.6rem 1rem;
+  color: var(--text);
+}
+
+/* Inline code: LTR-isolated fragments inside Persian text */
+.markdown-body code {
+  direction: ltr;
+  unicode-bidi: isolate;
+  overflow-wrap: anywhere;
+  font-family: "Courier New", monospace;
+  font-size: 0.92em;
+  background: var(--primary-soft);
+  padding: 0.1em 0.4em;
+  border-radius: 6px;
+}
+
+/* Code blocks: never forced RTL; preserved whitespace + horizontal scroll */
+.code-block {
+  direction: ltr;
+  text-align: left;
+  background: var(--code-bg);
+  color: var(--code-text);
+  border: 1px solid var(--code-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin: 1.2rem 0;
+}
+
+.code-block-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  direction: ltr;
+  background: var(--code-head-bg);
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  font-family: monospace;
+}
+
+.code-lang {
+  color: var(--code-muted);
+}
+
+.copy-code-btn {
+  background: transparent;
+  color: var(--code-text);
+  border: 1px solid var(--code-border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.15rem 0.6rem;
+}
+
+.copy-code-btn:hover {
+  background: var(--code-head-bg);
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 0.9rem 1.1rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--code-border) transparent;
+}
+
+.code-block pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+.code-block pre::-webkit-scrollbar-thumb {
+  background: var(--code-border);
+  border-radius: 999px;
+}
+
+.code-block pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.9rem;
+}
+
+/* Images: responsive, centered, never overflow */
+.markdown-body img.report-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.2rem auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+/* Tables: wrapped for horizontal scroll on narrow screens */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  margin: 1.2rem 0;
+}
+
+.table-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-wrap::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+
+/* Inserted by report.js only when a table is actually wider than its box, so
+   people know to swipe instead of pinch-zooming out of the page. */
+.markdown-body .table-scroll-hint {
+  margin: 0.9rem 0 0.3rem;
+  font-size: 0.75rem;
+  color: var(--text-soft);
+  text-align: center;
+}
+
+.markdown-body table {
+  border-collapse: collapse;
+  min-width: 100%;
+  font-size: 0.95rem;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.8rem;
+}
+
+.markdown-body thead {
+  background: var(--primary-soft);
+}
+
+.markdown-body hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin-block: 1.5rem;
+}
+
+.report-head-meta {
+  border-block-end: 1px solid var(--border);
+  padding-block-end: 1rem;
+}
+
+/* ---------------------------------------------------------------- footer */
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  padding-block: 1rem;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------- responsive */
+/* Mobile first: the base rules below are the phone design; the media
+   queries at the end progressively upgrade it for tablets and desktops.
+   The site is deliberately designed twice — never "a phone page stretched". */
+
+.markdown-body,
+.markdown-body p,
+.markdown-body li {
+  max-width: 100%;
+}
+
+.markdown-body table {
+  min-width: 100%;
+}
+
+.header-row,
+.site-nav,
+.admin-item-main,
+.asset-meta,
+.asset-url {
+  min-width: 0;
+}
+
+.header-row {
+  gap: 0.5rem;
+}
+
+/* Report titles/labels may wrap instead of overflowing. */
+.report-item a,
+.admin-item-main a {
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------ phones (<= 600px) */
+
+@media (max-width: 600px) {
+  .brand-sub {
+    display: none;
+  }
+
+  .site-nav {
+    gap: 0.4rem;
+  }
+
+  .site-nav a,
+  .nav-btn {
+    font-size: 0.85rem;
+    padding-inline: 0.6rem;
+  }
+
+  .stats {
+    flex-direction: column;
+  }
+
+  /* Wide report content goes edge-to-edge on phones, reclaiming the
+     gutters for tables and code. Each block still scrolls internally. */
+  .table-wrap,
+  .code-block {
+    margin-inline: calc(var(--gutter) * -1);
+    border-radius: 0;
+  }
+
+  .code-block {
+    border-inline: 0;
+  }
+
+  /* Denser tables so wide truth tables need far less sideways swiping. */
+  .markdown-body table {
+    font-size: 0.82rem;
+  }
+
+  .markdown-body th,
+  .markdown-body td {
+    padding: 0.4rem 0.5rem;
+  }
+
+  .markdown-body h2 {
+    font-size: 1.2rem;
+  }
+
+  /* Upload/asset rows: name + URL stack above full-width, easy-to-tap
+     action buttons. Long filenames and wide thumbnails stay contained. */
+  .upload-actions,
+  .asset-actions {
+    flex: 1 1 100%;
+  }
+
+  .upload-actions .btn,
+  .asset-actions .btn {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.35rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .markdown-body {
+    line-height: 1.85;
+    font-size: 0.97rem;
+  }
+
+  .markdown-body h2 {
+    font-size: 1.12rem;
+    padding-inline-end: 0.45rem;
+  }
+
+  .markdown-body h3 {
+    font-size: 1.02rem;
+  }
+
+  .markdown-body ul,
+  .markdown-body ol {
+    padding-inline-start: 1.25rem;
+  }
+
+  .markdown-body blockquote {
+    padding: 0.5rem 0.8rem;
+  }
+
+  .code-block pre {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .code-block pre code {
+    font-size: 0.82rem;
+  }
+}
+
+/* Server-rendered report content: a comfortable reading measure, widened
+   a little on big screens where there is room for wide tables. */
+article.markdown-body {
+  max-width: 46rem;
+  margin-inline: auto;
+}
+
+/* ------------------------------------------- tablets / small laptops */
+
+@media (min-width: 48em) {
+  .container {
+    max-width: 64rem;
+  }
+
+  .report-list {
+    gap: 1.1rem;
+  }
+
+  .report-item a {
+    font-size: 1.15rem;
+  }
+
+  .asset-list {
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  }
+}
+
+/* ------------------------------------------------------ desktop */
+
+@media (min-width: 64em) {
+  .container {
+    max-width: 74rem;
+  }
+
+  main {
+    padding-block: 2rem 3.5rem;
+  }
+
+  .search-form {
+    max-width: 32rem;
+  }
+
+  article.markdown-body {
+    max-width: 50rem;
+  }
+
+  /* A lone report becomes a wide horizontal row instead of a stretched
+     vertical card — the desktop home should look composed, not empty. */
+  .report-item:only-child {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 1.5rem 1.75rem;
+  }
+
+  .report-item:only-child a {
+    font-size: 1.3rem;
+  }
+
+  .report-item:only-child .report-meta {
+    margin-block-start: 0;
+  }
+}
+
+@media (min-width: 90em) {
+  .container {
+    max-width: 80rem;
+  }
+}

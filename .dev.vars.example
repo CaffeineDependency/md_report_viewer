@@ -1,0 +1,9 @@
+# Copy to `.dev.vars` (git-ignored) for local development.
+# Generate the values with:
+#   node scripts/hash-password.mjs YOUR_PASSWORD   -> ADMIN_PASSWORD_HASH
+#   node -e "console.log(crypto.randomBytes(32).toString('base64url'))" -> SESSION_SECRET
+#
+# For production, set the same names via `wrangler secret put` instead.
+
+ADMIN_PASSWORD_HASH = "pbkdf2$100000$SALT_BASE64URL$HASH_BASE64URL"
+SESSION_SECRET = "RANDOM_32_BYTES_BASE64URL"

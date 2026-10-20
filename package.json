@@ -1,0 +1,22 @@
+{
+  "name": "gozaresh-kar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Persian lab report repository on Cloudflare Workers (SSR, D1, R2)",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test",
+    "d1:migrate:local": "wrangler d1 migrations apply gozaresh-kar-db --local",
+    "d1:migrate:remote": "wrangler d1 migrations apply gozaresh-kar-db --remote",
+    "hash-password": "node scripts/hash-password.mjs",
+    "smoke": "node tests/smoke.mjs"
+  },
+  "dependencies": {
+    "markdown-it": "^14.1.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.151.2"
+  }
+}
