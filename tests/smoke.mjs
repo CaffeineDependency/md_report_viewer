@@ -1,5 +1,6 @@
 // End-to-end smoke test against a running `wrangler dev` server.
-// Usage: npm run smoke   (expects BASE_URL or http://localhost:8787)
+// Usage: SMOKE_PASSWORD=<admin password> npm run smoke
+//        (optional: BASE_URL, default http://localhost:8787)
 //
 // Covers: Persian pages, auth (failure/lockout is NOT included here to keep
 // the dev DB clean — see unit tests), CSRF rejection, report lifecycle,
@@ -7,7 +8,13 @@
 
 const BASE = (process.env.BASE_URL || "http://localhost:8787").replace(/\/$/, "");
 
-const DEV_PASSWORD = process.env.SMOKE_PASSWORD || "gk-dev-1234";
+const DEV_PASSWORD = process.env.SMOKE_PASSWORD;
+if (!DEV_PASSWORD) {
+  console.error(
+    "SMOKE_PASSWORD is required (the admin password of the target instance)."
+  );
+  process.exit(1);
+}
 
 let passed = 0;
 let failed = 0;

@@ -4,7 +4,8 @@ A Persian-language laboratory report repository running on Cloudflare.
 This document explains what the project is, exactly where it stands, and how
 every part works, so a new maintainer (human or agent) can continue without
 guessing. Code comments, identifiers and docs are English; every user-facing
-string is Persian; deployment lives in `docs/DEPLOYMENT.md`.
+string is Persian; deployment lives in `README.md` (`docs/DEPLOYMENT.md` is a
+short pointer to it).
 
 ---
 
@@ -38,6 +39,7 @@ Personas:
 | 8 | Responsive pass: real desktop layout (auto-fit grid, 74–80rem shell), phone report redesign (inset rounded table/code cards, denser cells, swipe hint), page-wide overflow guard | ✅ done, live-verified (44/44 smoke on prod) |
 | 9 | Syntax highlighting (highlight.js, server-side) + print/PDF export (A4 print stylesheet, light theme, colored code) | ✅ done, live-verified (46/46 smoke on prod) |
 | 10 | Remote images allowed (any http/https host) + any file type uploads (extensionless included) | ✅ done, live-verified (51/51 smoke on prod) |
+| 11 | Editor polish: preview refresh, scrollable preview, local-draft recovery, `[hidden]` fix, printable long code blocks | ✅ done, deployed |
 
 Everything verified locally against `wrangler dev` and then re-verified
 against the live production Worker (51-check smoke suite: 51/51 on both).
@@ -245,16 +247,17 @@ cp .dev.vars.example .dev.vars   # then generate values (password in §11)
 npx wrangler d1 migrations apply gozaresh-kar-db --local
 npx wrangler dev                 # http://localhost:8787
 npm test                         # node --test (renderer + assets units)
-npm run smoke                    # end-to-end against wrangler dev
-                                 # (BASE_URL + SMOKE_PASSWORD env to target prod)
+SMOKE_PASSWORD='<admin pw>' npm run smoke
+                                 # add BASE_URL=<url> to target production
 ```
 
-## 11. Current dev secrets (.dev.vars, git-ignored)
+## 11. Local dev secrets (.dev.vars, git-ignored)
 
-Dev password: `gk-dev-1234`.
-`ADMIN_PASSWORD_HASH=pbkdf2$100000$gWXih76C-MdYZdCkI8gWzw$STwGyNecSUlvhaZdoOSbwwX5Z4V8F7UOPTeE9m0UtZI`
-`SESSION_SECRET=t1gJNbMcwJLBvvKtn6ZxXHh8cUP98EGsMSHPDiX5VcA`
-(.dev.vars.example documents how to generate fresh values.)
+Create `.dev.vars` from `.dev.vars.example` and generate fresh values as
+described in that file. The real values are intentionally **not** committed:
+`.dev.vars` is git-ignored, and only production secrets are set with
+`wrangler secret put`. Rotate either value at any time by regenerating it and
+restarting `wrangler dev`.
 
 ## 12. Phase 7 — UI overhaul (2026-10-20)
 
@@ -325,8 +328,9 @@ Root causes found after phase 7:
   and lazy images are ready, and temporarily sets `document.title` to the
   report title so the saved file gets a clean name. `@media print` supplies
   `@page { size: A4; margin: 15mm 14mm }`, forces the light palette, hides
-  site chrome/toolbar/copy buttons, wraps code instead of clipping it, keeps
-  rows/images/code cards unbroken, and repeats table headers on every page.
+  site chrome/toolbar/copy buttons, wraps code instead of clipping it, lets
+  long code blocks paginate like text, keeps table rows and images unbroken,
+  and repeats table headers on every page.
   A server-side PDF would need Cloudflare Browser Rendering (paid) or an
   external service; JS PDF libs cannot shape Persian RTL text well.
 - **Verification**: 30 unit tests; local Chromium (Playwright) screenshots in
@@ -364,6 +368,30 @@ Root causes found after phase 7:
   errors) and rendered it in a generated PDF; smoke covers an uploaded
   `.exe`, `.html`, and an extensionless `Makefile`, all served as inert
   attachments; 51/51 smoke locally and on production.
+
+## 12e. Phase 11 — editor polish (2026-10-20)
+
+- **`hidden` actually hides now**: author rules like `.btn { display: inline-flex }`
+  override the UA's `[hidden] { display: none }`. That left the local-draft
+  restore button permanently visible (and silently inert with no snapshot).
+  `base.css` now has `[hidden] { display: none !important }`. «انتشار» is
+  deliberately never hidden, including on already-published reports.
+- **Local-draft restore works as intended**: the button appears only when a
+  snapshot for that report exists; the snapshot now captures title, category,
+  tags and markdown (not just markdown), and the temporary `gk:draft:new` key is
+  deleted when a new report is first saved so it cannot resurface as the
+  previous report's content on `/admin/new`.
+- **Refresh preview**: a «بهروزرسانی پیشنمایش» button next to «پیشنمایش»
+  re-renders through `/api/preview` without closing the pane and keeps the
+  scroll position. It is shown only while the preview is open.
+- **Preview scrolls like the editor**: `#report-markdown` and `#preview-area`
+  share a 40rem height (24rem minimum) and are both vertically resizable; the
+  preview has its own themed scrollbar, so long reports no longer stretch the
+  page. Tables/code still scroll inside their own wrappers.
+- **Printable code blocks**: print CSS now allows long fenced blocks to
+  fragment across pages (`break-inside: auto`, `overflow: visible`,
+  `orphans`/`widows: 2`); previously they were atomic and could be pushed
+  whole or clipped. Images and blockquotes remain unbreakable.
 
 ## 13. Open items / manual checklist
 

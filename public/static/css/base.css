@@ -92,6 +92,14 @@ html[data-theme="light"] {
   box-sizing: border-box;
 }
 
+/* Author rules such as `.btn { display: inline-flex }` override the UA
+   `[hidden] { display: none }`, which made `hidden` elements (publish on an
+   already-published report, local-draft restore, preview toggle) stay visible.
+   This keeps the attribute authoritative everywhere. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   font-size: 16px;
   /* Page-level guard: a stray wide child must never widen the document.
@@ -459,11 +467,20 @@ textarea {
   min-width: 14rem;
 }
 
+/* The editor and the preview are matching panes: same fixed height, same
+   min-height, both resizable vertically and both scroll inside themselves.
+   40rem is roughly the 20 rows the textarea asks for at line-height 2. */
+#report-markdown,
+#preview-area {
+  height: 40rem;
+  min-height: 24rem;
+  resize: vertical;
+}
+
 #report-markdown {
   font-size: 1rem;
   line-height: 2;
-  resize: vertical;
-  min-height: 24rem;
+  overflow-y: auto;
   unicode-bidi: plaintext;
 }
 
@@ -487,6 +504,21 @@ textarea {
 
 #preview-area {
   margin-block-start: 1.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Keep the reading position stable when the scrollbar appears. */
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+#preview-area::-webkit-scrollbar {
+  width: 10px;
+}
+
+#preview-area::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
 }
 
 /* ------------------------------------------------------------- uploads */
@@ -1478,10 +1510,12 @@ article.markdown-body {
     -webkit-print-color-adjust: exact;
   }
 
-  /* Fenced code: light card, wrapping (never clipped), kept on one page
-     when it fits; Chrome only breaks blocks taller than a page. */
+  /* Fenced code: light card, wrapping (never clipped), and allowed to flow
+     across pages like paragraph text. Atomic blocks get pushed whole to the
+     next page and overlap/clip when taller than a page. */
   .code-block {
-    break-inside: avoid;
+    break-inside: auto;
+    overflow: visible;
     background: #f6f8fa;
     border: 1px solid #d0d7de;
     border-radius: 4px;
@@ -1496,6 +1530,7 @@ article.markdown-body {
     color: #57606a;
     padding: 2pt 7pt;
     font-size: 8pt;
+    break-after: avoid;
   }
 
   .code-lang {
@@ -1504,6 +1539,9 @@ article.markdown-body {
 
   .code-block pre {
     overflow: visible;
+    break-inside: auto;
+    orphans: 2;
+    widows: 2;
     padding: 6pt 7pt;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
@@ -1572,7 +1610,7 @@ article.markdown-body {
     -webkit-print-color-adjust: exact;
   }
 
-  pre,
+  /* Images and quotes stay whole; code blocks intentionally do not. */
   blockquote,
   img {
     break-inside: avoid-page;

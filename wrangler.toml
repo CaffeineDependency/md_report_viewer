@@ -1,9 +1,9 @@
 # Wrangler config for gozaresh-kar.
 # Local development works as-is: bindings without IDs are auto-provisioned locally.
-# For production deployment, follow docs/DEPLOYMENT.md (created in phase 6):
-# run `wrangler d1 create` / `wrangler kv namespace create` and paste the
-# returned IDs below. Secrets are set via `wrangler secret put` (see
-# .dev.vars.example for the local equivalents).
+# For production deployment, follow the README section "Production deployment
+# (from a fresh checkout)": run `wrangler d1 create` / `wrangler kv namespace
+# create` and paste the returned IDs below. Secrets are set via
+# `wrangler secret put` (see .dev.vars.example for the local equivalents).
 
 name = "gozaresh-kar"
 main = "src/index.js"

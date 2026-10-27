@@ -159,6 +159,7 @@ function editorBody(data) {
       <button type="button" id="btn-save" class="btn btn-primary">ذخیره پیش‌نویس</button>
       <button type="button" id="btn-publish" class="btn btn-primary">انتشار</button>
       <button type="button" id="btn-preview" class="btn btn-ghost">پیش‌نمایش</button>
+      <button type="button" id="btn-refresh-preview" class="btn btn-ghost" hidden>به‌روزرسانی پیش‌نمایش</button>
       <button type="button" id="btn-restore-draft" class="btn btn-ghost" hidden>بازیابی پیش‌نویس محلی</button>
     </div>
     <p id="editor-message"></p>

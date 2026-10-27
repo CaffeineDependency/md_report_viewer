@@ -103,12 +103,12 @@
     save: document.getElementById("btn-save"),
     publish: document.getElementById("btn-publish"),
     preview: document.getElementById("btn-preview"),
+    refreshPreview: document.getElementById("btn-refresh-preview"),
     restore: document.getElementById("btn-restore-draft"),
     previewArea: document.getElementById("preview-area"),
     message: document.getElementById("editor-message"),
   };
 
-  var status = data.status || "draft";
   var reportId = data.reportId;
   var dirty = false;
   var busy = false;
@@ -121,7 +121,7 @@
 
   function setBusy(value) {
     busy = value;
-    [el.save, el.publish, el.preview].forEach(function (b) {
+    [el.save, el.publish, el.preview, el.refreshPreview].forEach(function (b) {
       if (b) b.disabled = value;
     });
   }
@@ -176,14 +176,19 @@
     } catch (e) { /* storage unavailable; ignore */ }
   }
 
-  el.markdown.addEventListener("input", function () {
-    dirty = true;
+  function saveLocalDraft() {
     try {
       window.localStorage.setItem(draftKey, JSON.stringify(readFields()));
     } catch (e) { /* storage unavailable; ignore */ }
-  });
-  el.title.addEventListener("input", function () {
-    dirty = true;
+  }
+
+  // Snapshot every field, not just the markdown: restoring a draft must not
+  // bring back a stale title/tags alongside newer body text.
+  [el.title, el.category, el.tags, el.markdown].forEach(function (field) {
+    field.addEventListener("input", function () {
+      dirty = true;
+      saveLocalDraft();
+    });
   });
 
   window.addEventListener("beforeunload", function (event) {
@@ -199,12 +204,10 @@
     api("/api/reports/" + reportId)
       .then(function (res) {
         var r = res.report;
-        status = r.status;
         el.title.value = r.title || "";
         el.category.value = r.category || "";
         el.tags.value = r.tags || "";
         el.markdown.value = r.markdown || "";
-        updatePublishButton(r.slug);
         showRestoreOption();
       })
       .catch(function (err) {
@@ -216,44 +219,61 @@
     el.title.focus();
   }
 
-  function updatePublishButton() {
-    if (status === "published" && el.publish) {
-      el.publish.hidden = true;
-    }
-  }
-
   // --- preview -----------------------------------------------------------
 
   var previewVisible = false;
 
-  el.preview.addEventListener("click", function () {
-    previewVisible = !previewVisible;
-    if (!previewVisible) {
-      el.previewArea.hidden = true;
-      el.preview.textContent = "پیش‌نمایش";
-      return;
-    }
+  function renderPreview() {
     var error = validateClient();
-    if (error) {
-      previewVisible = false;
-      setMessage(error, "error");
-      return;
-    }
+    if (error) return Promise.reject(new Error(error));
+
     setBusy(true);
-    api("/api/preview", { method: "POST", body: JSON.stringify({ markdown: el.markdown.value }) })
+    return api("/api/preview", { method: "POST", body: JSON.stringify({ markdown: el.markdown.value }) })
       .then(function (res) {
         el.previewArea.innerHTML = res.html;
-        el.previewArea.hidden = false;
-        el.preview.textContent = "بستن پیش‌نمایش";
-      })
-      .catch(function (err) {
-        setMessage(statusMessage(err), "error");
-        previewVisible = false;
       })
       .finally(function () {
         setBusy(false);
       });
+  }
+
+  function showPreview(visible) {
+    previewVisible = visible;
+    el.previewArea.hidden = !visible;
+    if (el.refreshPreview) el.refreshPreview.hidden = !visible;
+    el.preview.textContent = visible ? "بستن پیش‌نمایش" : "پیش‌نمایش";
+  }
+
+  el.preview.addEventListener("click", function () {
+    if (previewVisible) {
+      showPreview(false);
+      return;
+    }
+    renderPreview()
+      .then(function () {
+        showPreview(true);
+      })
+      .catch(function (err) {
+        setMessage(statusMessage(err), "error");
+      });
   });
+
+  // Re-render without closing the pane, so edits made while it is open can be
+  // reflected on demand. Scroll position is kept where the reader left it.
+  if (el.refreshPreview) {
+    el.refreshPreview.addEventListener("click", function () {
+      if (!previewVisible) return;
+      var scrollTop = el.previewArea.scrollTop;
+      renderPreview()
+        .then(function () {
+          el.previewArea.scrollTop = scrollTop;
+          setMessage("پیش‌نمایش به‌روز شد.", "ok");
+        })
+        .catch(function (err) {
+          setMessage(statusMessage(err), "error");
+        });
+    });
+  }
 
   // --- save ---------------------------------------------------------------
 
@@ -264,9 +284,17 @@
     var fields = readFields();
     if (data.mode === "new") {
       return api("/api/reports", { method: "POST", body: JSON.stringify(fields) }).then(function (res) {
+        // The snapshot was written under gk:draft:new. Drop that key before
+        // switching to the new report's key, otherwise /admin/new would keep
+        // offering to restore the previous report's content.
+        var previousKey = draftKey;
         reportId = res.id;
-        status = res.status;
         draftKey = "gk:draft:" + reportId;
+        try {
+          window.localStorage.removeItem(previousKey);
+        } catch (e) { /* storage unavailable; ignore */ }
+        savedDraft = null;
+        if (el.restore) el.restore.hidden = true;
         dirty = false;
         return res;
       });
